@@ -4,6 +4,7 @@ import argparse
 import os
 import json
 import re
+import subprocess
 
 parser = argparse.ArgumentParser(description='Command Line Utility to manage multiple git accounts')
 
@@ -71,6 +72,26 @@ def get_email_list():
 def get_alias_list():
     existing_configs = get_existing_configs()
     return list(existing_configs.keys())
+
+def update_git_remote_origin(alias):
+    # update the git remote origin to use the new alias
+    result = subprocess.run(["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True)    
+    remote_url = result.stdout.strip()
+    match = re.search(r"[:/]([^/:]+)/([^/]+)\.git$", remote_url)
+    if match:
+        username = match.group(1)
+        repo = match.group(2)
+    else:
+        print("Failed to parse the remote URL")
+        return
+
+    # Remove the existing origin and add the new one with the alias
+    os.system("git remote rm origin")
+    new_origin_url = f"git@{alias}:{username}/{repo}.git"
+    subprocess.run(["git", "remote", "add", "origin", new_origin_url])
+    subprocess.run(["git", "remote", "set-url", "origin", new_origin_url])
+
+    print(f"Updated remote origin to: {new_origin_url}")
 
 def list_accounts(args):
     list_of_accounts = get_existing_configs()
@@ -165,8 +186,8 @@ def add_account(args):
             config_file.write(
                 f"\nHost {alias}\n\tHostName github.com\n\tUser git\n\tIdentityFile {ssh_key_path}\n"
             )
+        update_git_remote_origin(alias)
 
-        
     except Exception as e:
         print(f"An error occurred: {e}")
 
