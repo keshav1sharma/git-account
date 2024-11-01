@@ -5,8 +5,9 @@ A command line utility to manage multiple GitHub accounts efficiently. This tool
 ## Installation
 
 ```bash
-pip install gitaccount
+pip install -i https://test.pypi.org/simple/ gitaccount
 ```
+### Package : https://test.pypi.org/project/gitaccount/
 
 ## Features
 
